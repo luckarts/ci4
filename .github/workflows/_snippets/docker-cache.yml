@@ -1,0 +1,23 @@
+# Snippet — Cache PostgreSQL Docker image
+# À réintégrer dans les jobs smoke / e2e / manual (avant "Start PostgreSQL").
+# Optimise le pull de l'image postgres:16-alpine entre les runs CI.
+
+      - name: Cache PostgreSQL Docker image
+        id: docker-cache          # (optionnel, utile si tu veux conditionner le step suivant)
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: /tmp/docker-cache
+          key: docker-postgres-16-alpine
+
+      - name: Load or pull PostgreSQL image
+        run: |
+          if [ -f /tmp/docker-cache/postgres.tar ]; then
+            docker load < /tmp/docker-cache/postgres.tar
+          else
+            docker pull postgres:16-alpine
+            mkdir -p /tmp/docker-cache
+            docker save postgres:16-alpine -o /tmp/docker-cache/postgres.tar
+          fi
+
+# Note : dans le job manual, ces deux steps avaient un guard :
+#   if: github.event.inputs.suite != 'unit'

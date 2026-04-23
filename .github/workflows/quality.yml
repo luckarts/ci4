@@ -1,0 +1,42 @@
+name: Code Quality
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-quality-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Cache Vendor
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor/
+          key: vendor-quality-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: vendor-
+
+      - name: Install dependencies
+        run: composer install --optimize-autoloader
+
+      - name: PHPStan Analysis
+        run: vendor/bin/phpstan analyse app/ --error-format=github --no-progress --memory-limit=-1

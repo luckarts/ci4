@@ -1,0 +1,84 @@
+name: Maintenance
+
+on:
+  schedule:
+    # Tous les lundi à 2h du matin
+    - cron: '0 2 * * 1'
+
+  # Exécution manuelle
+  workflow_dispatch:
+
+jobs:
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          tools: composer:v2
+
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor/
+          key: vendor-${{ hashFiles('backend/composer.lock') }}
+
+      - name: Install Dependencies
+        run: composer install --no-dev
+
+      - name: Security Check
+        run: composer audit
+
+      - name: Create Issue if Vulnerabilities Found
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Security Vulnerabilities Found',
+              body: 'Security audit failed. Please check the logs and update dependencies.',
+              labels: ['security', 'high-priority']
+            });
+
+  dependency-update:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          tools: composer:v2
+
+      - name: Update Dependencies
+        run: composer update --no-dev
+
+      - name: Create PR if Updates Available
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update dependencies'
+          title: '🔄 Weekly Dependency Update'
+          body: |
+            Automated dependency update.
+
+            Please review changes before merging.
+          branch: dependency-update
+          labels: maintenance
