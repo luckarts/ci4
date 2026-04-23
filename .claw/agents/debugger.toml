@@ -1,0 +1,3 @@
+name = "debugger"
+description = "Systematic root-cause analysis — reads before assuming"
+model = "claude-sonnet-4-6"

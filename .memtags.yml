@@ -1,0 +1,25 @@
+project: ci3-tasks
+stack_declared:
+- ci3
+- ci4
+- codeigniter
+- php
+- postgresql
+- pgvector
+- twig
+- jquery
+- oauth2
+- bshaffer
+- phpunit
+- docker
+- github-actions
+- mempalace
+- composer
+- makefile
+- d3
+- jwt
+stack_pending: []
+stack_ignored:
+- react
+- typescript
+- tanstack

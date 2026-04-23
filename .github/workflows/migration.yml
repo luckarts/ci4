@@ -1,0 +1,171 @@
+name: Migrations
+
+on:
+  pull_request:
+  push:
+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+
+  # ─── JOB 1 : Fresh DB → apply migrations ──────────────────────────────────
+  migrate-fresh:
+    name: Apply all migrations
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      mysql:
+        image: mysql:8.0
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: ci4_test
+          MYSQL_USER: ci4
+          MYSQL_PASSWORD: ci4_test
+        ports:
+          - 3306:3306
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          extensions: mysqli, pdo_mysql
+
+      - name: Cache Composer
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -u ci4 -pci4_test 2>/dev/null; then
+              echo "MySQL is ready"
+              exit 0
+            fi
+            echo "Waiting for MySQL... ($i/30)"
+            sleep 1
+          done
+          echo "MySQL failed to start"
+          exit 1
+
+      - name: Apply all migrations
+        run: php spark migrate
+        env:
+          CI_ENVIRONMENT: testing
+          DB_HOST: 127.0.0.1
+          DB_USER: ci4
+          DB_PASSWORD: ci4_test
+          DB_NAME: ci4_test
+          DB_PORT: 3306
+
+
+  # ─── JOB 2 : Rollback → re-apply (test réversibilité) ─────────────────────
+  migrate-rollback:
+    name: Test migration rollback
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: migrate-fresh
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      mysql:
+        image: mysql:8.0
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: ci4_test
+          MYSQL_USER: ci4
+          MYSQL_PASSWORD: ci4_test
+        ports:
+          - 3306:3306
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          extensions: mysqli, pdo_mysql
+
+      - name: Cache Composer
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -u ci4 -pci4_test 2>/dev/null; then
+              echo "MySQL is ready"
+              exit 0
+            fi
+            echo "Waiting for MySQL... ($i/30)"
+            sleep 1
+          done
+          echo "MySQL failed to start"
+          exit 1
+
+      - name: Apply all migrations
+        run: php spark migrate
+        env:
+          CI_ENVIRONMENT: testing
+          DB_HOST: 127.0.0.1
+          DB_USER: ci4
+          DB_PASSWORD: ci4_test
+          DB_NAME: ci4_test
+          DB_PORT: 3306
+
+      - name: Rollback last migration
+        run: php spark migrate:rollback
+        env:
+          CI_ENVIRONMENT: testing
+          DB_HOST: 127.0.0.1
+          DB_USER: ci4
+          DB_PASSWORD: ci4_test
+          DB_NAME: ci4_test
+          DB_PORT: 3306
+
+      - name: Re-apply migrations
+        run: php spark migrate
+        env:
+          CI_ENVIRONMENT: testing
+          DB_HOST: 127.0.0.1
+          DB_USER: ci4
+          DB_PASSWORD: ci4_test
+          DB_NAME: ci4_test
+          DB_PORT: 3306

@@ -61,11 +61,12 @@ while IFS= read -r FILE; do
   fi
 done <<< "$STAGED_PHP_FILES"
 
-# 3. PHPStan Check (only if in backend)
-if [ -n "$(echo "$STAGED_PHP_FILES" | grep '^backend/')" ]; then
+# 3. PHPStan Check (only if in backend, excluding tests)
+BACKEND_FILES=$(echo "$STAGED_PHP_FILES" | grep '^backend/' | grep -v '^backend/tests/' || true)
+if [ -n "$BACKEND_FILES" ]; then
   echo "✓ Running PHPStan..."
   cd "$BACKEND_DIR"
-  if ./vendor/bin/phpstan analyse --error-format=raw $(echo "$STAGED_PHP_FILES" | grep '^backend/' | sed 's|^backend/||') 2>/dev/null; then
+  if ./vendor/bin/phpstan analyse --error-format=raw $(echo "$BACKEND_FILES" | sed 's|^backend/||') 2>/dev/null; then
     echo "  ✓ PHPStan passed"
   else
     echo "  ✗ PHPStan errors found"

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.php$' || true)
+
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+echo "→ PHP syntax check..."
+for f in $STAGED; do
+  php -l "$f" || exit 1
+done
+
+echo "→ Composer validate..."
+composer validate --no-check-all --no-check-lock --quiet || exit 1
+
+echo "→ Autoload dump check..."
+composer dump-autoload --dry-run --quiet 2>&1 | grep -i 'error' && exit 1 || true
+
+echo "→ Require/include file existence..."
+for f in $STAGED; do
+  # Extract static require/include paths (single-quoted string, relative)
+  grep -nE "(require|include)(_once)?\s*\(?['\"]" "$f" 2>/dev/null | \
+  grep -oE "['\"][^'\"]+\.php['\"]" | \
+  tr -d "'\"" | while read path; do
+    dir=$(dirname "$f")
+    if [[ "$path" != /* ]] && [ ! -f "$dir/$path" ] && [ ! -f "$path" ]; then
+      echo "ERREUR require/include introuvable: $path dans $f"
+      exit 1
+    fi
+  done || exit $?
+done
+
+echo "✓ Pre-commit OK"

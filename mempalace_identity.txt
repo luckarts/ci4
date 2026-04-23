@@ -1,0 +1,50 @@
+Project: PalaceWork CI4 API
+Version: 1.0
+Date: 2026-04-23
+
+## Identity
+
+PalaceWork is a task management system with knowledge integration via MemPalace.
+This repository (ci4) contains the **backend API only** — a REST service built with CodeIgniter 4.
+
+## Architecture
+
+Backend: CodeIgniter 4 (PHP 8.1+)
+- REST API endpoints (JSON responses)
+- PostgreSQL database + pgvector for semantic search
+- OAuth2 / JWT authentication
+- Queue workers for async tasks
+- MemPalace integration for knowledge storage
+
+Frontend: Nuxt 3 (external consumer)
+- Not in this repository
+- Consumes the REST API
+- Handles UI, state management, graph visualization
+
+## Key Modules
+
+- Auth: OAuth2 + JWT tokens
+- Task: CRUD, state machine, tags, comments
+- Project: Multi-project support, invitations
+- Palace: MemPalace adapter + indexing
+- Shared: DTOs, utilities, responses
+
+## Database
+
+PostgreSQL with pgvector extension for semantic search.
+- Users, Tasks, Projects, Comments, Tags tables
+- Palace knowledge storage (JSON documents)
+
+## Development Philosophy
+
+- Karpathy-inspired: simple, readable code over clever abstractions
+- Minimize dependencies
+- Delete aggressively
+- Profile before optimizing
+- Prefer flat structure over deep nesting
+
+## Testing Strategy
+
+- Unit tests: PHPUnit without DB
+- Integration tests: PHPUnit with real PostgreSQL
+- Signal: if all tests of a flow mock the same endpoint → add integration test on real service

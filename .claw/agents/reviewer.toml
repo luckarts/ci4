@@ -1,0 +1,3 @@
+name = "reviewer"
+description = "Code review against architectural decisions and quality gates"
+model = "claude-sonnet-4-6"

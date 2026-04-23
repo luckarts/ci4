@@ -1,0 +1,214 @@
+{
+  "project": "PalaceWork CI4 API",
+  "created_at": "2026-04-23",
+  "wings": [
+    {
+      "id": "wing-architecture",
+      "name": "Architecture API",
+      "description": "Fondation technique — CI4 structure, patterns, conventions de code",
+      "rooms": [
+        {
+          "id": "room-ci4-setup",
+          "name": "CI4 Setup & Structure",
+          "drawers": [
+            {
+              "id": "drawer-project-structure",
+              "name": "Structure du projet",
+              "content": "# Structure du projet CI4\n\n## Arborescence\n```\napp/\n├── Controllers/     # API endpoints (REST)\n├── Models/          # Models CI4 + validation\n├── Filters/         # Middleware (auth, rate limiting)\n├── Config/          # Configuration services\n└── Libraries/       # Shared business logic\n\npublic/\n├── index.php        # API entry point\n└── .htaccess        # Routing rules\n\ntests/\n├── unit/            # PHPUnit sans DB\n└── integration/     # PHPUnit avec vraie DB\n```\n\n## Principes\n- Namespaces PSR-4 (autoload Composer)\n- Injection de dépendances via `Config/Services.php`\n- Models CI4 avec validation native + timestamps\n- Aucune référence frontend (API uniquement)\n"
+            },
+            {
+              "id": "drawer-routing-strategy",
+              "name": "Stratégie de routage",
+              "content": "# Routage REST CI4\n\nTous les endpoints sont au format RESTful.\n\n## Convention\n- `GET /api/tasks` — list\n- `POST /api/tasks` — create\n- `GET /api/tasks/{id}` — read\n- `PUT /api/tasks/{id}` — update\n- `DELETE /api/tasks/{id}` — delete\n\n## Filtres appliqués\n- `AuthFilter` — JWT validation (Bearer token)\n- `RateLimitFilter` — protection brute-force\n- `CORSFilter` — consommation par Nuxt frontend\n"
+            }
+          ]
+        },
+        {
+          "id": "room-patterns",
+          "name": "Design Patterns",
+          "drawers": [
+            {
+              "id": "drawer-repository-pattern",
+              "name": "Repository Pattern",
+              "content": "# Repository Pattern en CI4\n\n## Motivation\nDécoupler la logique métier (Service) de l'accès aux données (DB).\n\n## Structure\n```\nController → Service → Repository → Model → DB\n```\n\n## Avantage\n- Testabilité : mocker le Repository au niveau Service\n- Flexibilité : swapper DB sans toucher au Service\n- Karpathy principle : code lisible, responsabilité unique\n\n## Implémentation\n- `TaskRepository` — queries complexes, agrégations\n- `Service\\TaskService` — logique métier\n- `Controller\\TaskController` — exposition REST\n"
+            },
+            {
+              "id": "drawer-service-layer",
+              "name": "Service Layer",
+              "content": "# Service Layer — Orchestration métier\n\n## Responsabilité\n- Orchestrer les repositories\n- Valider les règles métier\n- Dispatcher les événements\n- Aucune connaissance HTTP\n\n## Injection de dépendances\n```php\npublic function __construct(private TaskRepository $tasks, private EventDispatcher $events) {}\n```\n\n## Pas de CRUD naïf\n- CRUD simple → direct dans le Repository\n- Logique complexe → Service\n- Exemple : créer une task crée aussi un palace wing auto\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wing-mempla palace",
+      "name": "MemPalace Integration",
+      "description": "Stockage du pourquoi — intégration avec MemPalace, indexation, sync",
+      "rooms": [
+        {
+          "id": "room-palace-architecture",
+          "name": "Architecture MemPalace",
+          "drawers": [
+            {
+              "id": "drawer-palace-link",
+              "name": "Lien task ↔ palace",
+              "content": "# Lien Task ↔ Palace\n\n## Clé logique\n- `task.uuid` = clé unique pour indexation MemPalace\n- Pas de FK SQL — deux stores indépendants\n\n## Flow de création\n1. `TaskCreated` event dispatché\n2. Queue Worker async reçoit l'event\n3. MemPalace HTTP adapter crée wing/room auto\n4. Wing = task.uuid, room = task.title\n\n## Drawers structurés\n- Decision : décision prise (Expand/Contract, refactor choisi)\n- Context : contexte technique, contraintes\n- Alternative : alternatives rejetées + pourquoi\n- Session : sessions Claude auto-indexées (PALACE-007)\n"
+            },
+            {
+              "id": "drawer-palace-indexing",
+              "name": "Stratégie d'indexation",
+              "content": "# Indexation MemPalace\n\n## Sources\n1. **Code commits** (PALACE-009) — webhook Git → `mempalace mine` auto sur commit/PR référençant `#task-uuid`\n2. **Sessions Claude** (SESSION-CAPTURE-001) — JSONL session → pipeline productisé → drawer \"Session [date]\"\n3. **Task metadata** — tags = rooms cross-tasks (TM06-ADV)\n\n## Signal staleness (PALACE-008-b)\n- Comparer drawer content vs mulch records\n- Flag \"⚠️ palace potentiellement périmé\" si divergence\n- Activer après MULCH-001 + PALACE-009\n"
+            }
+          ]
+        },
+        {
+          "id": "room-palace-features",
+          "name": "Features MemPalace",
+          "drawers": [
+            {
+              "id": "drawer-palace-snapshots",
+              "name": "Snapshots immuables",
+              "content": "# Palace Snapshots (PALACE-006)\n\n## Cas d'usage\nQuand task → `done`, créer snapshot immutable du palace.\n\n## Dégel explicite\n\"Reprendre cette task\" crée un nouveau snapshot base.\n\n## Avantage\n- Audit trail complet des décisions par version task\n- Pas de réécriture de l'historique\n\n## Implémentation\n- Table `palace_snapshots(task_uuid, version, content_json, created_at)`\n- Trigger sur `task.status = done` → copie palace actuel en snapshot\n"
+            },
+            {
+              "id": "drawer-palace-rbac",
+              "name": "RBAC & Private Drawers",
+              "content": "# RBAC MemPalace (PALACE-003 / PALACE-004)\n\n## Private Drawers\n- Champ `private=true` sur drawer\n- Jamais servi aux autres members\n- Inclus uniquement dans pull du owner (`user_id == requester`)\n\n## Token-based access\n- `mempalace pull` — JWT validation server-side\n- Lecture locale — zéro token pour Claude CLI (PALACE-005)\n\n## Audit trail\n- Policy rétention à définir avant livraison enterprise\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wing-auth-security",
+      "name": "Auth & Security",
+      "description": "Authentification, autorisations, rate limiting",
+      "rooms": [
+        {
+          "id": "room-oauth2-jwt",
+          "name": "OAuth2 & JWT",
+          "drawers": [
+            {
+              "id": "drawer-oauth2-flow",
+              "name": "Flow OAuth2 (F001)",
+              "content": "# OAuth2 Implementation (F001)\n\n## Stack\n- Library : bshaffer/oauth2-server-php ou implémentation native CI4\n- Endpoint : `POST /token` → access token + refresh token\n- Format : Bearer JWT\n\n## Token structure\n```json\n{\n  \"sub\": \"user.id\",\n  \"email\": \"user.email\",\n  \"org_id\": \"organization.id\",\n  \"exp\": 3600,\n  \"iat\": 1234567890\n}\n```\n\n## TTL configurable\n- Access token : 1h\n- Refresh token : 7j\n- Configurable en `.env`\n"
+            },
+            {
+              "id": "drawer-refresh-token",
+              "name": "Refresh Token (SEC001)",
+              "content": "# Refresh Token Management\n\n## Endpoint\n`POST /token/refresh` → nouvel access token\n\n## Rotation\n- Old refresh token invalidé après use\n- Prévient les token theft\n- Table `oauth_refresh_tokens(token_hash, user_id, expires_at, revoked_at)`\n"
+            },
+            {
+              "id": "drawer-logout-revocation",
+              "name": "Logout & Token Revocation (SEC002)",
+              "content": "# Logout & Revocation (SEC002)\n\n## Endpoint\n`POST /token/revoke` — blacklist ou invalidation\n\n## Stratégie\n1. **Token blacklist** (simple) — table `revoked_tokens(jti, revoked_at)`\n   - Check `jti` claim sur chaque requête\n   - O(1) lookup\n\n2. **`jti` claim + expiration** — laisser le token expirer naturellement\n   - Réduit I/O DB\n   - Compromise : logout prend effet après expiration\n\nRecommandation : hybrid — revoke immediat pour logout, expiration naturelle après.\n"
+            }
+          ]
+        },
+        {
+          "id": "room-rate-limiting",
+          "name": "Rate Limiting",
+          "drawers": [
+            {
+              "id": "drawer-rate-limit-oauth",
+              "name": "Rate Limiting OAuth2 (SEC003)",
+              "content": "# Rate Limiting sur POST /token (SEC003)\n\n## Protection brute-force\n- Limite : 5 tentatives par IP / 15 min\n- Fallback : exponential backoff après 3 failures\n\n## Implémentation CI4\n```php\n// app/Filters/RateLimitFilter.php\nif ($request->getPath() === 'token' && $request->getMethod() === 'post') {\n    $ip = $request->getIPAddress();\n    $attempts = $cache->get(\"oauth_attempts_{$ip}\") ?? 0;\n    if ($attempts >= 5) {\n        return $this->respond(429, ['error' => 'Too many requests']);\n    }\n}\n```\n\n## Storage\n- Redis (production) ou Cache File (dev)\n- Configurable en `.env`\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wing-data-model",
+      "name": "Data Model",
+      "description": "Base de données, entities, migrations, évolution schéma",
+      "rooms": [
+        {
+          "id": "room-schema",
+          "name": "Schéma DB",
+          "drawers": [
+            {
+              "id": "drawer-users-table",
+              "name": "Table users",
+              "content": "# Table users\n\n```sql\nCREATE TABLE users (\n  id BIGSERIAL PRIMARY KEY,\n  uuid UUID UNIQUE NOT NULL,\n  email VARCHAR(255) UNIQUE NOT NULL,\n  is_verified BOOLEAN DEFAULT false,\n  deleted_at TIMESTAMP NULL,  -- soft delete (USR001)\n  created_at TIMESTAMP DEFAULT NOW(),\n  updated_at TIMESTAMP DEFAULT NOW()\n);\n```\n\n## Notes\n- `uuid` — clé logique pour MemPalace\n- `deleted_at` — RGPD-compliant soft delete\n- `is_verified` — email verification (TM00-F002)\n"
+            },
+            {
+              "id": "drawer-tasks-table",
+              "name": "Table tasks",
+              "content": "# Table tasks\n\n```sql\nCREATE TABLE tasks (\n  id BIGSERIAL PRIMARY KEY,\n  uuid UUID UNIQUE NOT NULL,\n  project_id BIGINT NOT NULL REFERENCES projects(id),\n  title VARCHAR(255) NOT NULL,\n  status ENUM('todo', 'in_progress', 'in_review', 'done') DEFAULT 'todo',\n  assignee_id BIGINT REFERENCES users(id),\n  column_id BIGINT REFERENCES board_columns(id),\n  due_date DATE NULL,\n  order_index INT DEFAULT 0,\n  created_at TIMESTAMP DEFAULT NOW(),\n  updated_at TIMESTAMP DEFAULT NOW()\n);\n```\n\n## État machine\ntodo → in_progress → in_review → done\n(Transitions validées dans CI4 Model)\n"
+            },
+            {
+              "id": "drawer-migrations-strategy",
+              "name": "Stratégie Migrations",
+              "content": "# Migrations CI4 (ARCH011)\n\n## Convention\n- Expand/Contract pour breaking changes\n- Jamais de `DROP COLUMN` direct\n- Step 1 : ajouter colonne, deployer code reader\n- Step 2 : deployer writer (popule colonne)\n- Step 3 : (optionnel) cleanup ancienne colonne après 1 semaine\n\n## Exemple : task.org_id\n```php\n// Migration 1 : Expand\n$forge->addColumn('tasks', ['org_id' => ['type' => 'BIGINT', 'null' => true]]);\n\n// Code : TaskModel::save() populate org_id\n\n// Migration 2 : Contract\n$forge->modifyColumn('tasks', ['org_id' => ['null' => false]]);\n$forge->addForeignKey('tasks', 'org_id', 'organizations', 'id');\n\n// Migration 3 : Cleanup (après 1 week)\n$forge->dropColumn('tasks', 'user_id');\n```\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wing-queue-events",
+      "name": "Queue & Events",
+      "description": "Architecture asynchrone — event bus, queue workers, DLQ",
+      "rooms": [
+        {
+          "id": "room-event-bus",
+          "name": "Event Bus CI4",
+          "drawers": [
+            {
+              "id": "drawer-event-system",
+              "name": "System d'événements",
+              "content": "# Event Bus CI4\n\n## Implémentation\nCI4 Events natif via `Events::trigger()`\n\n## Listeners synchrones (MVP)\n- EVENT-001 : TaskCreated → SubtaskCompletion listener (recalcul %)\n- EVENT-002 : MemberInvited → Email listener (sync)\n- EVENT-003 : TaskDependency changes → Notification listener\n\n## Dispatch async (ASYNC001)\nQuand contention détectée → workers file d'attente\n- Queue table : `queue_jobs(payload_json, status, attempts, created_at)`\n- Worker CLI : `php spark queue:work`\n- DLQ : dead letter queue pour retries exhausted\n"
+            },
+            {
+              "id": "drawer-event-palace",
+              "name": "Events → MemPalace (PALACE-001/002)",
+              "content": "# Event → Palace Indexing\n\n## Flow async (EVENT-PALACE-001)\n1. `TaskCreated` dispatché synchrone\n2. Queue Worker reçoit async\n3. MemPalace adapter appelé\n4. Wing créé : `task.uuid` + title\n5. Drawer base : \"Task created\"\n\n## Prérequis\n- PALACE-001 : MemPalace HTTP adapter\n- PALACE-002 : UUID task ↔ palace link\n- ASYNC001 : Queue infrastructure\n\n## Code\n```php\n// app/Events/TaskCreated.php\npublic $uuid, $title;\n\n// app/Listeners/PalaceIndexListener.php\npublic function handle(TaskCreated $event) {\n    // Queue async job → MemPalace adapter\n    $this->queue->enqueue('PalaceIndexJob', ['uuid' => $event->uuid, 'title' => $event->title]);\n}\n```\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wing-testing",
+      "name": "Testing Strategy",
+      "description": "Approche TDD, tests unitaires, intégration, conventions",
+      "rooms": [
+        {
+          "id": "room-unit-tests",
+          "name": "Unit Tests",
+          "drawers": [
+            {
+              "id": "drawer-unit-philosophy",
+              "name": "Philosophie tests unitaires",
+              "content": "# Unit Tests — 0 DB, 0 CI4 bootstrap\n\n## Contenu\n- Logique métier : ValidationRules, TaskStateMachine\n- Repositories mocker → testent la logique Service isolée\n- Models : uniquement les custom accessors/mutators\n\n## Pas de test\n- Setters/getters auto (CI4 Model)\n- Queries directes → test intégration\n- Controllers → test intégration (verbe HTTP)\n\n## Vélocité\nTests unitaires fast (< 100ms) → feedback immédiat en dev\n"
+            }
+          ]
+        },
+        {
+          "id": "room-integration-tests",
+          "name": "Integration Tests",
+          "drawers": [
+            {
+              "id": "drawer-integration-philosophy",
+              "name": "Philosophie tests intégration",
+              "content": "# Integration Tests — vraie DB\n\n## Contenu\n- Queries Repository → valident aggrégation / joins\n- Endpoints REST → valident routing + filtres + réponse JSON\n- Workflows entiers : créer task → assigner → marquer done → palace créé\n\n## Signal d'alerte\nTous les tests d'un flow mockent le même endpoint → créer test intégration réel\n\n## Prérequis\n- PostgreSQL local ou Docker\n- Seeds de base (users, projects) — chargées avant each test\n- Rollback après each test (transactions)\n\n## Convention\n```php\n// tests/integration/TaskControllerTest.php\nclass TaskControllerTest extends CIUnitTestCase {\n    protected function setUp(): void {\n        $this->db->transBegin();\n        $this->seedBase(); // users, projects\n    }\n    \n    protected function tearDown(): void {\n        $this->db->transRollback();\n    }\n}\n```\n"
+            }
+          ]
+        },
+        {
+          "id": "room-test-infra",
+          "name": "Infrastructure Testing",
+          "drawers": [
+            {
+              "id": "drawer-seeds",
+              "name": "Seeds (TEST-INFRA001)",
+              "content": "# Seeds de développement\n\n## Contenu\n```php\n// database/seeds/UserSeeder.php\npublic function run() {\n    $this->db->table('users')->insert([\n        [\n            'uuid' => 'uuid-alice',\n            'email' => 'alice@example.com',\n            'is_verified' => true,\n        ],\n    ]);\n}\n```\n\n## Charges par\n- Tests intégration (before each)\n- Dev local (`php spark db:seed`)\n- CI — seeds chargées dans container PostgreSQL\n\n## Bénéfice\n- Tests reproductibles\n- Pas de fixtures manquelles\n- Base de données stable\n"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

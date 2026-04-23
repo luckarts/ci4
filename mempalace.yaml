@@ -1,0 +1,30 @@
+wing: ci4
+rooms:
+- name: documentation
+  description: Files from docs/
+  keywords:
+  - documentation
+  - docs
+- name: backend
+  description: Files from backend/
+  keywords:
+  - backend
+  - backend
+- name: scripts
+  description: Files from scripts/
+  keywords:
+  - scripts
+  - scripts
+- name: testing
+  description: Files from tests/
+  keywords:
+  - testing
+  - tests
+- name: skills
+  description: Files from skills/
+  keywords:
+  - skills
+  - skills
+- name: general
+  description: Files that don't fit other rooms
+  keywords: []

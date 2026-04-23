@@ -1,0 +1,77 @@
+# PROJET : PalaceWork — CI3 → CI4 Task Manager (Monorepo)
+
+## Vision globale
+
+Task manager personnel et collaboratif où chaque tâche porte son palace de connaissance.
+Deux stores indépendants liés par `task.uuid` : PostgreSQL (le *quoi*) + MemPalace (le *pourquoi*).
+Construit en CI3 pour apprendre, migré vers CI4 comme exercice pédagogique.
+
+---
+
+## Structure Monorepo
+
+```
+PalaceWork/
+├── backend/          # CI3 → CI4
+│   ├── application/modules/   # Bounded Contexts (HMVC léger)
+│   ├── system/
+│   └── public/
+├── frontend/         # React + TanStack Query
+├── palace/           # MemPalace lib (MIT v3.3.0)
+├── docker/
+└── Makefile
+```
+
+---
+
+## Stack technique
+
+### Backend
+- CodeIgniter 3 · PHP 8+ · PostgreSQL
+- Auth : bshaffer/oauth2-server-php (OAuth2 / JWT)
+- Queue : table DB + workers PHP CLI (ASYNC001)
+- State Machine : classe PHP pure (TaskStateMachine)
+- Architecture : modules HMVC — `application/modules/{BC}/`
+
+### Frontend
+- React · TanStack Query · TypeScript
+
+### Infra
+- Docker Compose · GitHub Actions (lint / test / e2e)
+- pgvector (MemPalace embeddings — conditionnel SPIKE-PALACE-001)
+
+---
+
+## Modules (Bounded Contexts)
+
+| Module | Statut |
+|--------|--------|
+| `modules/Shared/` | ⏳ En cours |
+| `modules/Auth/` | ⏳ En cours |
+| `modules/Task/` | ⏳ En cours |
+| `modules/Project/` | ⏳ En cours |
+| `modules/Palace/` | 🔜 Phase PalaceWork |
+| `modules/Org/` | 🔜 Pivot SaaS |
+
+---
+
+## Roadmap — grandes phases
+
+1. **Fondation** : OAuth2, rate limiting, CI, module split (ARCH009)
+2. **MVP Perso** : Tasks, State Machine CI3, tags, comments (TM03-MVP → TM07-MVP)
+3. **Phase PalaceWork** : MemPalace HTTP adapter, Queue Worker, knowledge layer
+4. **Pivot SaaS** : multi-tenant, invitations, PostgreSQL RLS
+5. **Phase 3** : Collaboration, Activity Feed, SSE notifications
+6. **Phase 4** : Visualisation graph (D3.js / Cytoscape)
+7. **Migration CI4** : MIG001–MIG010 — apprentissage incrémental
+
+---
+
+## Conventions clés
+
+- **Git flow** : PRs vers `develop` (pas `main`). `main` = production stable.
+- **Tests** : PHPUnit 9. Tout service mocké → ≥1 test intégration réel (règle AUTH-INT001).
+- **Commits** : conventionnels. Jamais `Co-Authored-By`. Jamais committer `.gitignore`.
+- **Plan avant implémentation** : toujours écrire le plan complet et attendre validation.
+- **Bash** : une commande à la fois, pas de chaînage `&&`.
+- **Réponses** : pas de résumé en fin de réponse. Opérations mémoire silencieuses.

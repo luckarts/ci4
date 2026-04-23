@@ -14,7 +14,8 @@
         "codeigniter4/framework": "^4.7",
         "league/oauth2-server": "^9.3",
         "nyholm/psr7": "^1.8",
-        "nyholm/psr7-server": "^1.1"
+        "nyholm/psr7-server": "^1.1",
+        "ramsey/uuid": "^4.9"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",

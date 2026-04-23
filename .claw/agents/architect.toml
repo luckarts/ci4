@@ -1,0 +1,3 @@
+name = "architect"
+description = "Architecture planning — DDD/Hexagonal, API design, bounded contexts"
+model = "claude-sonnet-4-6"
