@@ -1,0 +1,19 @@
+# Snippet — Generate OAuth2 keys (RSA 4096)
+# À réintégrer dans les jobs smoke / e2e / manual quand OAuth2 sera requis en CI.
+
+      - name: Generate OAuth2 keys
+        run: |
+          mkdir -p var/oauth
+          PASSPHRASE=$(openssl rand -base64 32)
+          openssl genrsa -out var/oauth/private.pem -passout pass:$PASSPHRASE 4096
+          openssl rsa -pubout -in var/oauth/private.pem -passin pass:$PASSPHRASE -out var/oauth/public.pem
+          echo "OAUTH_PASSPHRASE=$PASSPHRASE" >> $GITHUB_ENV
+
+# Variables d'env à ajouter dans les steps "Run *" correspondants :
+#   OAUTH_PRIVATE_KEY: ${{ github.workspace }}/backend/var/oauth/private.pem
+#   OAUTH_PUBLIC_KEY: ${{ github.workspace }}/backend/var/oauth/public.pem
+#   OAUTH_PASSPHRASE: ${{ env.OAUTH_PASSPHRASE }}
+#   OAUTH_ENCRYPTION_KEY: ${{ secrets.OAUTH_ENCRYPTION_KEY }}
+
+# Pour le job manual, le step avait un guard :
+#   if: github.event.inputs.suite != 'unit'

@@ -1,0 +1,76 @@
+# Snippet — Job manual (workflow_dispatch)
+# À réintégrer dans test.yml quand le déclenchement manuel depuis l'UI GitHub sera utile.
+# Penser à réactiver aussi les inputs workflow_dispatch en haut du fichier.
+
+  # ─── MANUAL — workflow_dispatch avec paramètres ────────────────────────────
+  manual:
+    name: Manual — ${{ github.event.inputs.suite }} (${{ github.event.inputs.group }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'workflow_dispatch'
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Start PostgreSQL
+        if: github.event.inputs.suite != 'unit'
+        run: |
+          docker run -d --name postgres \
+            -e POSTGRES_DB=app -e POSTGRES_USER=app -e POSTGRES_PASSWORD=test \
+            -p 5432:5432 postgres:16-alpine
+          until docker exec postgres pg_isready -U app; do sleep 1; done
+
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Setup test database
+        if: github.event.inputs.suite != 'unit'
+        run: |
+          php bin/console doctrine:database:create --env=test --if-not-exists --no-interaction
+          php bin/console doctrine:schema:create --env=test --no-interaction
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app
+
+      - name: Run — ${{ github.event.inputs.suite }} / ${{ github.event.inputs.group }}
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app
+          SUITE: ${{ github.event.inputs.suite }}
+          GROUP: ${{ github.event.inputs.group }}
+        run: |
+          case "$SUITE" in
+            unit)  php bin/phpunit --testsuite unit --no-coverage ;;
+            smoke) php bin/phpunit --group smoke --no-coverage ;;
+            e2e)   php bin/phpunit --testsuite E2E --group "$GROUP" --no-coverage ;;
+          esac
+
+# inputs workflow_dispatch à remettre en haut du fichier :
+#
+# workflow_dispatch:
+#   inputs:
+#     suite:
+#       description: 'Suite à lancer'
+#       required: true
+#       type: choice
+#       options: [smoke, e2e, unit]
+#       default: smoke
+#     group:
+#       description: 'Groupe PHPUnit (user, task...)'
+#       required: false
+#       default: 'user'

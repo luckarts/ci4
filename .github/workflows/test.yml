@@ -1,0 +1,136 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'backend/**'
+
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'backend/**'
+
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Suite à lancer'
+        required: true
+        type: choice
+        options: [unit, database]
+        default: unit
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+
+  # --- LEVEL 1 : Unit tests (no DB) ---
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          extensions: sqlite3, pdo_sqlite
+
+      - name: Cache Composer
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run unit tests
+        run: php vendor/bin/phpunit tests/unit --no-coverage
+
+
+  # --- LEVEL 2 : Database tests (SQLite3 in-memory) ---
+  database:
+    name: Database Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: unit
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          extensions: sqlite3, pdo_sqlite
+
+      - name: Cache Composer
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run database tests
+        env:
+          CODEIGNITER_ENVIRONMENT: testing
+        run: php vendor/bin/phpunit tests/database tests/session --no-coverage
+
+
+  # --- MANUAL - workflow_dispatch ---
+  manual:
+    name: Manual — ${{ github.event.inputs.suite }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'workflow_dispatch'
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          extensions: sqlite3, pdo_sqlite
+
+      - name: Cache Composer
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run — ${{ github.event.inputs.suite }}
+        env:
+          CODEIGNITER_ENVIRONMENT: testing
+        run: |
+          case "${{ github.event.inputs.suite }}" in
+            unit)     php vendor/bin/phpunit tests/unit --no-coverage ;;
+            database) php vendor/bin/phpunit tests/database tests/session --no-coverage ;;
+          esac

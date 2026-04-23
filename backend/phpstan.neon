@@ -1,0 +1,24 @@
+parameters:
+  level: 5
+  paths:
+    - app/
+  excludePaths:
+    - vendor/
+    - writable/
+    - tests/
+  reportUnmatchedIgnoredErrors: false
+  bootstrapFiles:
+    - phpstan-bootstrap.php
+  ignoreErrors:
+    - '#Call to an undefined method CodeIgniter#'
+    - '#Access to an undefined property#'
+    - '#Undefined class CodeIgniter#'
+    - '#Function (clean_path|esc|lang|service|view|is_cli) not found#'
+    - '#Calling static::\w+\(\) outside of class scope#'
+    - '#Variable \$\w+ might not be defined#'
+    - '#Left side of && is always (true|false)#'
+    - '#Right side of && is always (true|false)#'
+    - '#Strict comparison using (===|!==) between .* will always evaluate to (true|false)#'
+    - '#Undefined class (Kint|Config\\Kint)#'
+    - '#Property Config\\Kint::\$\w+ has unknown class Kint\\#'
+    - '#Parameter \#\d+ .* \((float\|int|int\|float)\) given#'
