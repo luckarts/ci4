@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Pre-commit hook: PHP syntax, namespace, and PHPStan checks
+# Installation: cp scripts/hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+set -e
+
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+BACKEND_DIR="$PROJECT_ROOT/backend"
+ERRORS=0
+
+echo "Running pre-commit checks..."
+
+# Get staged PHP files
+STAGED_PHP_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.php$' || true)
+
+if [ -z "$STAGED_PHP_FILES" ]; then
+  exit 0
+fi
+
+# 1. PHP Syntax Check
+echo "✓ Checking PHP syntax..."
+while IFS= read -r FILE; do
+  if php -l "$FILE" > /dev/null 2>&1; then
+    echo "  ✓ $FILE"
+  else
+    echo "  ✗ Syntax error in $FILE"
+    ERRORS=$((ERRORS + 1))
+  fi
+done <<< "$STAGED_PHP_FILES"
+
+# 2. Namespace Check (for backend files)
+echo "✓ Checking namespaces..."
+while IFS= read -r FILE; do
+  if [[ $FILE == backend/app/* ]]; then
+    NAMESPACE=$(grep -m1 "^namespace " "$FILE" | sed 's/namespace \([^;]*\);/\1/' || echo "")
+
+    if [ -n "$NAMESPACE" ]; then
+      # Extract expected namespace from path
+      RELATIVE_PATH="${FILE#backend/app/}"
+      DIR_PATH=$(dirname "$RELATIVE_PATH")
+      EXPECTED_NS="App"
+
+      # Special case: Config files use 'Config' namespace, not 'App\Config'
+      if [ "$DIR_PATH" = "Config" ]; then
+        EXPECTED_NS="Config"
+      elif [ "$DIR_PATH" != "." ]; then
+        DIR_PARTS=$(echo "$DIR_PATH" | tr '/' '\\')
+        EXPECTED_NS="App\\$DIR_PARTS"
+      fi
+
+      if [ "$NAMESPACE" != "$EXPECTED_NS" ]; then
+        echo "  ✗ Wrong namespace in $FILE"
+        echo "     Found: $NAMESPACE"
+        echo "     Expected: $EXPECTED_NS"
+        ERRORS=$((ERRORS + 1))
+      else
+        echo "  ✓ $FILE"
+      fi
+    fi
+  fi
+done <<< "$STAGED_PHP_FILES"
+
+# 3. PHPStan Check (only if in backend)
+if [ -n "$(echo "$STAGED_PHP_FILES" | grep '^backend/')" ]; then
+  echo "✓ Running PHPStan..."
+  cd "$BACKEND_DIR"
+  if ./vendor/bin/phpstan analyse --error-format=raw $(echo "$STAGED_PHP_FILES" | grep '^backend/' | sed 's|^backend/||') 2>/dev/null; then
+    echo "  ✓ PHPStan passed"
+  else
+    echo "  ✗ PHPStan errors found"
+    ERRORS=$((ERRORS + 1))
+  fi
+  cd - > /dev/null
+fi
+
+if [ $ERRORS -gt 0 ]; then
+  echo ""
+  echo "❌ Pre-commit checks failed ($ERRORS error(s))"
+  exit 1
+fi
+
+echo ""
+echo "✅ All checks passed!"
+exit 0

@@ -11,7 +11,10 @@
     },
     "require": {
         "php": "^8.2",
-        "codeigniter4/framework": "^4.7"
+        "codeigniter4/framework": "^4.7",
+        "league/oauth2-server": "^9.3",
+        "nyholm/psr7": "^1.8",
+        "nyholm/psr7-server": "^1.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",
