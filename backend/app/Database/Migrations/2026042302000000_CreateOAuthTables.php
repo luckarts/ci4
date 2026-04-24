@@ -115,6 +115,15 @@ class CreateOAuthTables extends Migration
         $this->db->table('oauth_scopes')->insert([
             ['id' => 'profile'],
         ]);
+
+        // Seed default OAuth client
+        $this->db->table('oauth_clients')->insert([
+            'id'              => 'app_client',
+            'secret'          => 'secret',
+            'name'            => 'App Client',
+            'redirect_uris'   => null,
+            'is_confidential' => true,
+        ]);
     }
 
     public function down()

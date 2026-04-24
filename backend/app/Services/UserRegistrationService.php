@@ -26,11 +26,11 @@ class UserRegistrationService
 
         $userId = Uuid::uuid4()->toString();
         $this->repository->save([
-            'id'         => $userId,
-            'email'      => $dto->email,
-            'password'   => password_hash($dto->password, PASSWORD_BCRYPT),
-            'first_name' => $dto->first_name,
-            'last_name'  => $dto->last_name,
+            'id'             => $userId,
+            'email'          => $dto->email,
+            'password_hash'  => password_hash($dto->password, PASSWORD_BCRYPT),
+            'first_name'     => $dto->first_name,
+            'last_name'      => $dto->last_name,
         ]);
 
         return $userId;

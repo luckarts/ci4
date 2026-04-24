@@ -23,6 +23,35 @@ abstract class ApiTestCase extends CIUnitTestCase
         return $this->apiRequest('PUT', $uri, $data, $headers);
     }
 
+    protected function apiPostFormEncoded(string $uri, array $data = []): array
+    {
+        $url = $this->baseUrl . $uri;
+        $curl = curl_init($url);
+
+        curl_setopt_array($curl, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/x-www-form-urlencoded'],
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => http_build_query($data),
+        ]);
+
+        $response = curl_exec($curl);
+        $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+
+        if ($error) {
+            throw new \RuntimeException("HTTP request failed: {$error}");
+        }
+
+        return [
+            'status' => $statusCode,
+            'body'   => $response ? json_decode($response, true) : null,
+            'raw'    => $response,
+        ];
+    }
+
     private function apiRequest(string $method, string $uri, array $data = [], array $headers = []): array
     {
         $url = $this->baseUrl . $uri;

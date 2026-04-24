@@ -7,6 +7,7 @@ use App\Exceptions\UserAlreadyExistsException;
 use App\Services\UserRegistrationService;
 use CodeIgniter\API\ResponseTrait;
 use CodeIgniter\Controller;
+use CodeIgniter\HTTP\Response;
 
 class AuthController extends Controller
 {
@@ -49,16 +50,32 @@ class AuthController extends Controller
         $serverResponse = $psr17Factory->createResponse();
 
         try {
-            $response = \App\Libraries\OAuthServer::getInstance()
+            $psrResponse = \App\Libraries\OAuthServer::getInstance()
                 ->getAuthorizationServer()
                 ->respondToAccessTokenRequest($serverRequest, $serverResponse);
         } catch (\League\OAuth2\Server\Exception\OAuthServerException $e) {
-            $response = $e->generateHttpResponse($serverResponse);
+            $psrResponse = $e->generateHttpResponse($serverResponse);
         } catch (\Exception $e) {
-            $response = $serverResponse->withStatus(500)
+            $psrResponse = $serverResponse->withStatus(500)
                 ->withBody($psr17Factory->createStream(json_encode(['error' => 'server_error'])));
         }
 
-        return $response;
+        // Convert PSR-7 response to CodeIgniter response
+        $this->response->setStatusCode($psrResponse->getStatusCode());
+
+        // Set headers
+        foreach ($psrResponse->getHeaders() as $name => $values) {
+            foreach ($values as $value) {
+                $this->response->setHeader($name, $value);
+            }
+        }
+
+        // Set body
+        $body = (string) $psrResponse->getBody();
+        if (!empty($body)) {
+            $this->response->setBody($body);
+        }
+
+        return $this->response;
     }
 }

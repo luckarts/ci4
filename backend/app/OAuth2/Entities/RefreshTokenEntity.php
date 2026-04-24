@@ -9,8 +9,6 @@ use League\OAuth2\Server\Entities\Traits\RefreshTokenTrait;
 
 class RefreshTokenEntity implements RefreshTokenEntityInterface
 {
-    use RefreshTokenTrait;
-
     private string $identifier = '';
     private DateTimeImmutable $expiryDateTime;
     private ?AccessTokenEntityInterface $accessToken = null;
