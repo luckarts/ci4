@@ -110,6 +110,18 @@ abstract class ApiTestCase extends CIUnitTestCase
 
     protected function getAccessToken(string $email, string $password): string
     {
+        $tokens = $this->getTokenPair($email, $password);
+        return $tokens['access_token'];
+    }
+
+    protected function getRefreshToken(string $email, string $password): string
+    {
+        $tokens = $this->getTokenPair($email, $password);
+        return $tokens['refresh_token'];
+    }
+
+    protected function getTokenPair(string $email, string $password): array
+    {
         $curl = curl_init($this->baseUrl . '/auth/token');
 
         curl_setopt_array($curl, [
@@ -132,11 +144,14 @@ abstract class ApiTestCase extends CIUnitTestCase
         curl_close($curl);
 
         if ($statusCode !== 200) {
-            throw new \RuntimeException("Failed to get access token: " . $response);
+            throw new \RuntimeException("Failed to get tokens: " . $response);
         }
 
         $decoded = json_decode($response, true);
-        return $decoded['access_token'] ?? null;
+        return [
+            'access_token' => $decoded['access_token'] ?? null,
+            'refresh_token' => $decoded['refresh_token'] ?? null,
+        ];
     }
 
     protected function assertStatus(int $expected, array $response): void

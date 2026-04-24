@@ -78,4 +78,79 @@ class AuthController extends Controller
 
         return $this->response;
     }
+
+    public function revoke()
+    {
+        $input = $this->request->getJSON(true) ?? [];
+        if (empty($input)) {
+            $input = $this->request->getPost();
+        }
+
+        $token = $input['token'] ?? '';
+        $tokenTypeHint = $input['token_type_hint'] ?? '';
+
+        if (empty($token)) {
+            return $this->respond([], 200);
+        }
+
+        $db = \Config\Database::connect();
+        $encryptionKey = getenv('OAUTH_ENCRYPTION_KEY');
+
+        // Try to revoke as refresh token
+        if ($tokenTypeHint === 'refresh_token' || empty($tokenTypeHint)) {
+            if ($this->tryRevokeRefreshToken($token, $db, $encryptionKey)) {
+                return $this->respond([], 200);
+            }
+        }
+
+        // Try to revoke as access token
+        if ($tokenTypeHint === 'access_token' || empty($tokenTypeHint)) {
+            if ($this->tryRevokeAccessToken($token, $db)) {
+                return $this->respond([], 200);
+            }
+        }
+
+        // RFC 7009: always return 200, even if token is invalid
+        return $this->respond([], 200);
+    }
+
+    private function tryRevokeRefreshToken(string $token, \CodeIgniter\Database\BaseConnection $db, string $encryptionKey): bool
+    {
+        try {
+            $key = \Defuse\Crypto\Key::loadFromAsciiSafeString($encryptionKey);
+            $decrypted = \Defuse\Crypto\Crypto::decrypt($token, $key);
+            $payload = json_decode($decrypted, true);
+
+            if (isset($payload['refresh_token_id'])) {
+                $repo = new \App\OAuth2\Repositories\RefreshTokenRepository($db);
+                $repo->revokeRefreshToken($payload['refresh_token_id']);
+                return true;
+            }
+        } catch (\Throwable $e) {
+            // Not a valid refresh token, continue
+        }
+
+        return false;
+    }
+
+    private function tryRevokeAccessToken(string $token, \CodeIgniter\Database\BaseConnection $db): bool
+    {
+        try {
+            $parts = explode('.', $token);
+            if (count($parts) !== 3) {
+                return false;
+            }
+
+            $payload = json_decode(base64_decode($parts[1]), true);
+            if (isset($payload['jti'])) {
+                $repo = new \App\OAuth2\Repositories\AccessTokenRepository($db);
+                $repo->revokeAccessToken($payload['jti']);
+                return true;
+            }
+        } catch (\Throwable $e) {
+            // Not a valid access token, continue
+        }
+
+        return false;
+    }
 }

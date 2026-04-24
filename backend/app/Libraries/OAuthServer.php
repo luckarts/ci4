@@ -11,6 +11,7 @@ use CodeIgniter\Database\BaseConnection;
 use DateInterval;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Grant\PasswordGrant;
+use League\OAuth2\Server\Grant\RefreshTokenGrant;
 use League\OAuth2\Server\ResourceServer;
 
 class OAuthServer
@@ -52,6 +53,11 @@ class OAuthServer
         );
         $passwordGrant->setRefreshTokenTTL(new DateInterval('P30D'));
         $this->authorizationServer->enableGrantType($passwordGrant, new DateInterval('PT1H'));
+
+        // Enable refresh token grant
+        $refreshGrant = new RefreshTokenGrant(new RefreshTokenRepository($db));
+        $refreshGrant->setRefreshTokenTTL(new DateInterval('P30D'));
+        $this->authorizationServer->enableGrantType($refreshGrant, new DateInterval('PT1H'));
 
         // ResourceServer for JWT validation
         $this->resourceServer = new ResourceServer(
