@@ -5,7 +5,6 @@ namespace App\OAuth2\Entities;
 use DateTimeImmutable;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
 use League\OAuth2\Server\Entities\RefreshTokenEntityInterface;
-use League\OAuth2\Server\Entities\Traits\RefreshTokenTrait;
 
 class RefreshTokenEntity implements RefreshTokenEntityInterface
 {
