@@ -28,6 +28,12 @@ CodeIgniter 4 · REST API · PHP 8.1+ · PostgreSQL + pgvector
 | `git` | `.claw/skills/git/SKILL.md` | Commits conventionnels, workflow PR, checklist |
 | `ci3-architecture` | `.claw/skills/ci3-architecture/SKILL.md` | Architecture complète CI3 — Repository, DI, DTOs, design patterns, refactoring |
 
+### Palace & Knowledge Management
+
+| Skill | Fichier | Usage |
+|-------|---------|-------|
+| `palace-blog` | `.claw/skills/palace-blog/SKILL.md` | Automatise mining MemPalace + extraction session + génération blog — `make palace` (one command!) |
+
 ### Workflow APEX
 
 | Skill | Fichier | Usage |
@@ -74,6 +80,10 @@ CodeIgniter 4 · REST API · PHP 8.1+ · PostgreSQL + pgvector
 | "Je veux committer sans pousser" | `/git:cm` |
 | "Je dois choisir entre plusieurs approches" | `brainstorming` → `apex:architect` |
 | "Je veux challenger une décision avec plusieurs points de vue" | `multi-agent-brainstorming` |
+| "Je veux générer un blog de session après mon travail" | `make palace` ou `palace-blog` skill |
+| "Je veux documenter la vision et l'architecture du projet" | `palace-blog` (génère palace-blog-*.md automatiquement) |
+| "Je dois extraire les décisions et commandes de ma session" | `make palace-extract` ou `palace-blog` |
+| "Je veux vérifier que le tech stack du projet est à jour" | `make palace-verify` ou `palace-blog` |
 
 ---
 

@@ -56,6 +56,7 @@ class OAuthServer
 
         // Enable refresh token grant
         $refreshGrant = new RefreshTokenGrant(new RefreshTokenRepository($db));
+        $refreshGrant->setAccessTokenRepository(new AccessTokenRepository($db));
         $refreshGrant->setRefreshTokenTTL(new DateInterval('P30D'));
         $this->authorizationServer->enableGrantType($refreshGrant, new DateInterval('PT1H'));
 

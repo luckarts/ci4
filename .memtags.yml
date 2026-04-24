@@ -1,13 +1,11 @@
 project: ci3-tasks
 stack_declared:
-- ci3
 - ci4
 - codeigniter
 - php
 - postgresql
 - pgvector
-- twig
-- jquery
+- front
 - oauth2
 - bshaffer
 - phpunit
@@ -18,8 +16,10 @@ stack_declared:
 - makefile
 - d3
 - jwt
-stack_pending: []
-stack_ignored:
 - react
 - typescript
 - tanstack
+stack_pending: []
+stack_ignored:
+- twig
+- jquery

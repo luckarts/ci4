@@ -161,27 +161,24 @@ class Database extends Config
      * @var array<string, mixed>
      */
     public array $tests = [
-        'DSN'         => '',
-        'hostname'    => '127.0.0.1',
-        'username'    => '',
-        'password'    => '',
-        'database'    => ':memory:',
-        'DBDriver'    => 'SQLite3',
-        'DBPrefix'    => 'db_',  // Needed to ensure we're working correctly with prefixes live. DO NOT REMOVE FOR CI DEVS
-        'pConnect'    => false,
-        'DBDebug'     => true,
-        'charset'     => 'utf8',
-        'DBCollat'    => '',
-        'swapPre'     => '',
-        'encrypt'     => false,
-        'compress'    => false,
-        'strictOn'    => true,
-        'failover'    => [],
-        'port'        => 3306,
-        'foreignKeys' => true,
-        'busyTimeout' => 1000,
-        'synchronous' => null,
-        'dateFormat'  => [
+        'DSN'      => '',
+        'hostname' => '127.0.0.1',
+        'username' => 'ci4',
+        'password' => 'password',
+        'database' => 'ci4_oauth_test',
+        'DBDriver' => 'Postgre',
+        'DBPrefix' => '',
+        'pConnect' => false,
+        'DBDebug'  => true,
+        'charset'  => 'utf8',
+        'schema'   => 'public',
+        'swapPre'  => '',
+        'encrypt'  => false,
+        'compress' => false,
+        'strictOn' => false,
+        'failover' => [],
+        'port'     => 5433,
+        'dateFormat' => [
             'date'     => 'Y-m-d',
             'datetime' => 'Y-m-d H:i:s',
             'time'     => 'H:i:s',
@@ -192,14 +189,12 @@ class Database extends Config
     {
         parent::__construct();
 
-        // Read PostgreSQL configuration from environment variables
-        $this->default['hostname'] = getenv('database.default.hostname') ?: $this->default['hostname'];
-        $this->default['port']     = (int)(getenv('database.default.port') ?: $this->default['port']);
-        $this->default['database'] = getenv('database.default.database') ?: $this->default['database'];
-        $this->default['username'] = getenv('database.default.username') ?: $this->default['username'];
-        $this->default['password'] = getenv('database.default.password') ?: $this->default['password'];
-        $this->default['DBDriver'] = getenv('database.default.DBDriver') ?: $this->default['DBDriver'];
-        $this->default['schema']   = getenv('database.default.schema') ?: $this->default['schema'];
+        // Read configuration from .env or environment variables
+        $this->default['hostname'] = $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: $this->default['hostname'];
+        $this->default['port']     = (int)($_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: $this->default['port']);
+        $this->default['database'] = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: $this->default['database'];
+        $this->default['username'] = $_ENV['DB_USER'] ?? getenv('DB_USER') ?: $this->default['username'];
+        $this->default['password'] = $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?: $this->default['password'];
 
         // Ensure that we always set the database group to 'tests' if
         // we are currently running an automated test suite, so that

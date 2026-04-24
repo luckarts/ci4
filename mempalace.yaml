@@ -28,3 +28,9 @@ rooms:
 - name: general
   description: Files that don't fit other rooms
   keywords: []
+
+# Hook — Génère automatiquement le blog après chaque mine
+hooks:
+  post_mine:
+    - description: "Generate Palace blog"
+      run: "python3 scripts/palace/blog_generator.py"

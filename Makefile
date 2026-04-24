@@ -1,4 +1,4 @@
-.PHONY: test test-unit test-integration test-feature serve setup db-up db-down
+.PHONY: test test-unit test-integration test-feature serve setup db-up db-down palace palace-auto palace-extract palace-verify palace-search
 
 setup:
 	bash scripts/install-hooks.sh
@@ -23,5 +23,20 @@ test:
 
 serve:
 	cd backend && php spark serve --host 0.0.0.0 --port 8080
+
+palace:
+	python3 scripts/palace/palace_blog_auto.py
+
+palace-auto:
+	python3 scripts/palace/palace_blog_auto.py
+
+palace-extract:
+	python3 scripts/palace/palace_blog_auto.py --extract
+
+palace-verify:
+	python3 scripts/palace/palace_blog_auto.py --verify
+
+palace-search:
+	@read -p "Search query: " query; mempalace search "$$query"
 
 .DEFAULT_GOAL := help
