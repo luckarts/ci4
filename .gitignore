@@ -153,3 +153,4 @@ backend/.phpintel
 backend/.vscode/
 backend/phpunit*.xml
 backend/.nb-gradle/
+backend/writable/oauth_keys/
