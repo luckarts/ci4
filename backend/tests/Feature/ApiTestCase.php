@@ -8,6 +8,12 @@ abstract class ApiTestCase extends CIUnitTestCase
 {
     protected string $baseUrl = 'http://localhost:8080';
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \App\Libraries\AuthContext::reset();
+    }
+
     protected function apiPost(string $uri, array $data = [], array $headers = []): array
     {
         return $this->apiRequest('POST', $uri, $data, $headers);
