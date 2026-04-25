@@ -130,7 +130,7 @@ class AuthenticationTest extends ApiTestCase
 
         $this->assertStatus(200, $response);
         $this->assertArrayHasKey('access_token', $response['body']);
-        $this->assertNotEqual($tokens['access_token'], $response['body']['access_token']);
+        $this->assertNotEquals($tokens['access_token'], $response['body']['access_token']);
     }
 
     public function test_invalid_refresh_token_returns_400()

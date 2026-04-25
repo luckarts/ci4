@@ -45,6 +45,11 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
             ->get()
             ->getRow();
 
-        return $token && $token->revoked;
+        if (!$token) {
+            return false;
+        }
+
+        // SQLite returns boolean as 0/1 or 'f'/'t'
+        return $token->revoked === 1 || $token->revoked === '1' || $token->revoked === true || $token->revoked === 't';
     }
 }

@@ -81,7 +81,12 @@ class AuthController extends Controller
 
     public function revoke()
     {
-        $input = $this->request->getJSON(true) ?? [];
+        $input = [];
+        try {
+            $input = $this->request->getJSON(true) ?? [];
+        } catch (\Exception $e) {
+            // Not JSON, try form-encoded
+        }
         if (empty($input)) {
             $input = $this->request->getPost();
         }
@@ -117,12 +122,13 @@ class AuthController extends Controller
     private function tryRevokeRefreshToken(string $token, \CodeIgniter\Database\BaseConnection $db, string $encryptionKey): bool
     {
         try {
-            $key = \Defuse\Crypto\Key::loadFromAsciiSafeString($encryptionKey);
-            $decrypted = \Defuse\Crypto\Crypto::decrypt($token, $key);
+            $repo = new \App\OAuth2\Repositories\RefreshTokenRepository($db);
+
+            // Decrypt with password (the encryptionKey is a string, not a Key object)
+            $decrypted = \Defuse\Crypto\Crypto::decryptWithPassword($token, $encryptionKey);
             $payload = json_decode($decrypted, true);
 
             if (isset($payload['refresh_token_id'])) {
-                $repo = new \App\OAuth2\Repositories\RefreshTokenRepository($db);
                 $repo->revokeRefreshToken($payload['refresh_token_id']);
                 return true;
             }
