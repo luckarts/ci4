@@ -29,6 +29,11 @@ abstract class ApiTestCase extends CIUnitTestCase
         return $this->apiRequest('PUT', $uri, $data, $headers);
     }
 
+    protected function apiDelete(string $uri, array $headers = []): array
+    {
+        return $this->apiRequest('DELETE', $uri, [], $headers);
+    }
+
     protected function apiPostFormEncoded(string $uri, array $data = []): array
     {
         $url = $this->baseUrl . $uri;

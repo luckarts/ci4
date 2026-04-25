@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\DTO\UpdateProfileDTO;
 use App\Exceptions\UserNotFoundException;
 use App\Libraries\AuthContext;
+use App\Services\DeleteUserService;
 use App\Services\UpdateProfileService;
 use CodeIgniter\API\ResponseTrait;
 use CodeIgniter\Controller;
@@ -74,6 +75,31 @@ class UserController extends Controller
             return $this->respond(['error' => $e->getMessage()], 404);
         } catch (\Throwable $e) {
             return $this->respond(['error' => 'Update failed'], 500);
+        }
+    }
+
+    public function destroy(string $id)
+    {
+        $authUserId = AuthContext::getUserId();
+        if ($authUserId === null) {
+            return $this->respond(['error' => 'Unauthorized'], 401);
+        }
+
+        if ($authUserId !== $id) {
+            return $this->respond(['error' => 'Forbidden'], 403);
+        }
+
+        try {
+            $service = new DeleteUserService(
+                new \App\Repositories\UserRepository(\Config\Database::connect())
+            );
+            $deleted = $service->deleteUser($id);
+
+            return $this->respond($deleted, 200);
+        } catch (UserNotFoundException $e) {
+            return $this->respond(['error' => $e->getMessage()], 404);
+        } catch (\Throwable $e) {
+            return $this->respond(['error' => 'Delete failed'], 500);
         }
     }
 }
