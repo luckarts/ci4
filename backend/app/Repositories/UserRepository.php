@@ -31,4 +31,21 @@ class UserRepository implements UserRepositoryContract
         $this->db->table('users')->insert($data);
         return $data['id'];
     }
+
+    public function update(string $id, array $data): array
+    {
+        $data['updated_at'] = date('Y-m-d H:i:s');
+        $this->db->table('users')
+            ->where('id', $id)
+            ->update($data);
+
+        return $this->findById($id);
+    }
+
+    public function delete(string $id): void
+    {
+        $this->db->table('users')
+            ->where('id', $id)
+            ->delete();
+    }
 }
