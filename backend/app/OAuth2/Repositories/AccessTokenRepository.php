@@ -34,12 +34,14 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
 
     public function persistNewAccessToken(AccessTokenEntityInterface $accessTokenEntity): void
     {
+        $tokenId = $accessTokenEntity->getIdentifier();
+
         $this->db->table('oauth_access_tokens')->insert([
-            'id' => $accessTokenEntity->getIdentifier(),
+            'id' => $tokenId,
             'user_id' => $accessTokenEntity->getUserIdentifier(),
             'client_id' => $accessTokenEntity->getClient()->getIdentifier(),
             'scopes' => implode(' ', $this->scopesToArray($accessTokenEntity->getScopes())),
-            'revoked' => false,
+            'revoked' => 'false',
             'expires_at' => date('Y-m-d H:i:s', $accessTokenEntity->getExpiryDateTime()->getTimestamp()),
         ]);
     }
@@ -58,7 +60,7 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
             ->get()
             ->getRow();
 
-        return $token && $token->revoked;
+        return $token && ($token->revoked === true || $token->revoked === 't');
     }
 
     private function scopesToArray(array $scopes): array
