@@ -40,3 +40,7 @@ defined('CI_DEBUG')      || define('CI_DEBUG', true);
 // SUPPORTPATH is normally set by PHPUnit's bootstrap; define it here so that
 // `spark` commands (migrate, serve…) work when CI_ENVIRONMENT=testing.
 defined('SUPPORTPATH') || define('SUPPORTPATH', realpath(ROOTPATH . 'tests/_support/') . DIRECTORY_SEPARATOR);
+
+// Use dummy cache handler to disable throttling in tests
+$cacheConfig = new \Config\Cache();
+$cacheConfig->handler = 'dummy';
