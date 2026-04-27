@@ -10,9 +10,11 @@ class OAuthRateLimitFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        // Skip rate limiting if cache handler is dummy (used in tests)
-        $cacheHandler = getenv('CACHE_HANDLER') ?: 'file';
-        if ($cacheHandler === 'dummy') {
+        // Skip rate limiting in testing environment or if cache handler is dummy
+        if (defined('CI_ENVIRONMENT') && CI_ENVIRONMENT === 'testing') {
+            return null;
+        }
+        if ((getenv('CACHE_HANDLER') ?: 'file') === 'dummy') {
             return null;
         }
 
