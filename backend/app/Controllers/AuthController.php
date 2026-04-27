@@ -13,6 +13,16 @@ class AuthController extends Controller
 {
     use ResponseTrait;
 
+    /**
+     * POST /auth/register
+     * Register a new user account
+     *
+     * @return JSON User ID on successful registration
+     * @throws 201 Created - User successfully registered
+     * @throws 409 Conflict - User already exists with this email
+     * @throws 422 Unprocessable Entity - Validation failed
+     * @throws 500 Internal Server Error - Registration failed
+     */
     public function register()
     {
         $input = $this->request->getJSON(true);
@@ -40,6 +50,16 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * POST /auth/token
+     * Generate OAuth2 access token and refresh token (password grant flow)
+     *
+     * @return JSON Access token and refresh token
+     * @throws 200 OK - Tokens generated successfully
+     * @throws 400 Bad Request - Invalid credentials or missing parameters
+     * @throws 429 Too Many Requests - Rate limit exceeded
+     * @throws 500 Internal Server Error - Server error
+     */
     public function token()
     {
         $psr17Factory = new \Nyholm\Psr7\Factory\Psr17Factory();
@@ -79,6 +99,14 @@ class AuthController extends Controller
         return $this->response;
     }
 
+    /**
+     * POST /auth/revoke
+     * Revoke OAuth2 token (access or refresh token)
+     *
+     * @return JSON Empty response (RFC 7009 compliant)
+     * @throws 200 OK - Token revoked or invalid token (always 200 per RFC 7009)
+     * @throws 429 Too Many Requests - Rate limit exceeded
+     */
     public function revoke()
     {
         $input = [];

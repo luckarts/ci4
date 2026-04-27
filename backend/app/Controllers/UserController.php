@@ -14,6 +14,16 @@ class UserController extends Controller
 {
     use ResponseTrait;
 
+    /**
+     * GET /users/{id}
+     * Returns user profile information (authenticated users only)
+     *
+     * @param string $id User ID to retrieve
+     * @return JSON User object without password hash
+     * @throws 401 Unauthorized - No valid authentication token
+     * @throws 403 Forbidden - User can only access their own profile
+     * @throws 404 Not Found - User does not exist
+     */
     public function show(string $id)
     {
         $authUserId = AuthContext::getUserId();
@@ -40,6 +50,17 @@ class UserController extends Controller
         return $this->respond($user, 200);
     }
 
+    /**
+     * PUT /users/{id}/profile
+     * Updates user profile information (authenticated users only)
+     *
+     * @param string $id User ID to update
+     * @return JSON Updated user object without password hash
+     * @throws 401 Unauthorized - No valid authentication token
+     * @throws 403 Forbidden - User can only update their own profile
+     * @throws 404 Not Found - User does not exist
+     * @throws 422 Unprocessable Entity - Validation failed
+     */
     public function update(string $id)
     {
         $authUserId = AuthContext::getUserId();
@@ -78,6 +99,16 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * DELETE /users/{id}
+     * Deletes user account (authenticated users only)
+     *
+     * @param string $id User ID to delete
+     * @return JSON Confirmation of deletion
+     * @throws 401 Unauthorized - No valid authentication token
+     * @throws 403 Forbidden - User can only delete their own account
+     * @throws 404 Not Found - User does not exist
+     */
     public function destroy(string $id)
     {
         $authUserId = AuthContext::getUserId();
