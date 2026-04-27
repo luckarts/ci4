@@ -34,14 +34,17 @@ abstract class ApiTestCase extends CIUnitTestCase
         return $this->apiRequest('DELETE', $uri, [], $headers);
     }
 
-    protected function apiPostFormEncoded(string $uri, array $data = []): array
+    protected function apiPostFormEncoded(string $uri, array $data = [], array $headers = []): array
     {
         $url = $this->baseUrl . $uri;
         $curl = curl_init($url);
 
+        $defaultHeaders = ['Content-Type: application/x-www-form-urlencoded'];
+        $allHeaders = array_merge($defaultHeaders, $headers);
+
         curl_setopt_array($curl, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER     => ['Content-Type: application/x-www-form-urlencoded'],
+            CURLOPT_HTTPHEADER     => $allHeaders,
             CURLOPT_TIMEOUT        => 10,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => http_build_query($data),

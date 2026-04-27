@@ -9,14 +9,6 @@ namespace Tests\Feature;
  */
 class RateLimitTest extends ApiTestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-        // Enable real cache for rate limiting tests instead of dummy
-        $cacheConfig = new \Config\Cache();
-        $cacheConfig->handler = 'file';
-    }
-
     public function test_rate_limit_returns_429_after_capacity_exceeded()
     {
         $userData = [
@@ -32,8 +24,10 @@ class RateLimitTest extends ApiTestCase
 
         $clientId = getenv('OAUTH_CLIENT_ID') ?: 'app_client';
         $clientSecret = getenv('OAUTH_CLIENT_SECRET') ?: 'secret';
+        // Use unique IP per test run to avoid cache collisions
+        $testIp = '192.168.' . random_int(1, 254) . '.' . random_int(1, 254);
 
-        // Make 5 valid requests (within capacity)
+        // Make 5 valid requests (within capacity of 5)
         for ($i = 0; $i < 5; $i++) {
             $response = $this->apiPostFormEncoded('/auth/token', [
                 'grant_type'    => 'password',
@@ -42,6 +36,9 @@ class RateLimitTest extends ApiTestCase
                 'client_id'     => $clientId,
                 'client_secret' => $clientSecret,
                 'scope'         => 'profile',
+            ], [
+                'X-Rate-Limit-Capacity: 5',
+                'X-Test-Client-IP: ' . $testIp,
             ]);
 
             $this->assertStatus(200, $response);
@@ -56,6 +53,9 @@ class RateLimitTest extends ApiTestCase
             'client_id'     => $clientId,
             'client_secret' => $clientSecret,
             'scope'         => 'profile',
+        ], [
+            'X-Rate-Limit-Capacity: 5',
+            'X-Test-Client-IP: ' . $testIp,
         ]);
 
         $this->assertStatus(429, $response);

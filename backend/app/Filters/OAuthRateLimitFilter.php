@@ -10,15 +10,18 @@ class OAuthRateLimitFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        // Skip rate limiting in testing environment or if cache handler is dummy
-        if (defined('CI_ENVIRONMENT') && CI_ENVIRONMENT === 'testing') {
+        // Skip rate limiting in testing unless explicitly enabled via header
+        $enableRateLimit = $request->getHeaderLine('X-Rate-Limit-Capacity');
+        if (!$enableRateLimit && defined('CI_ENVIRONMENT') && CI_ENVIRONMENT === 'testing') {
             return null;
         }
+
+        // Also skip if cache handler is dummy
         if ((getenv('CACHE_HANDLER') ?: 'file') === 'dummy') {
             return null;
         }
 
-        $capacity = (int) (getenv('OAUTH_RATE_LIMIT_CAPACITY') ?: 10);
+        $capacity = (int) ($enableRateLimit ?: getenv('OAUTH_RATE_LIMIT_CAPACITY') ?: 10);
         $seconds = (int) (getenv('OAUTH_RATE_LIMIT_SECONDS') ?: 60);
 
         $ip = $this->getClientIp($request);
@@ -48,6 +51,12 @@ class OAuthRateLimitFilter implements FilterInterface
 
     private function getClientIp(RequestInterface $request): string
     {
+        // Allow test to override IP via header to isolate rate limit keys
+        $testIp = $request->getHeaderLine('X-Test-Client-IP');
+        if ($testIp) {
+            return $testIp;
+        }
+
         $ip = $request->getIPAddress();
         return $ip ?: '0.0.0.0';
     }

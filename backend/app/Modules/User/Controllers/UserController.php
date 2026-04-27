@@ -10,10 +10,22 @@ use App\Modules\User\Services\DeleteUserService;
 use App\Modules\User\Services\UpdateProfileService;
 use CodeIgniter\API\ResponseTrait;
 use CodeIgniter\Controller;
+use CodeIgniter\HTTP\ResponseInterface;
 
 class UserController extends Controller
 {
     use ResponseTrait;
+
+    private UserRepository $repository;
+    private UpdateProfileService $updateService;
+    private DeleteUserService $deleteService;
+
+    public function __construct()
+    {
+        $this->repository    = service('userRepository');
+        $this->updateService = service('updateProfileService');
+        $this->deleteService = service('deleteUserService');
+    }
 
     /**
      * GET /users/{id}
@@ -33,8 +45,7 @@ class UserController extends Controller
         }
 
         try {
-            $repository = new UserRepository(\Config\Database::connect());
-            $user       = $repository->findById($id);
+            $user = $this->repository->findById($id);
         } catch (\Throwable $e) {
             return $this->respond(['error' => 'User not found'], 404);
         }
@@ -64,13 +75,8 @@ class UserController extends Controller
      */
     public function update(string $id)
     {
-        $authUserId = AuthContext::getUserId();
-        if ($authUserId === null) {
-            return $this->respond(['error' => 'Unauthorized'], 401);
-        }
-
-        if ($authUserId !== $id) {
-            return $this->respond(['error' => 'Forbidden'], 403);
+        if ($guard = $this->assertOwnership($id)) {
+            return $guard;
         }
 
         $input = $this->request->getJSON(true);
@@ -86,10 +92,7 @@ class UserController extends Controller
                 return $this->respond(['errors' => $errors], 422);
             }
 
-            $service = new UpdateProfileService(
-                new UserRepository(\Config\Database::connect())
-            );
-            $updated = $service->updateProfile($id, $dto);
+            $updated = $this->updateService->updateProfile($id, $dto);
 
             unset($updated['password_hash']);
             return $this->respond($updated, 200);
@@ -117,15 +120,22 @@ class UserController extends Controller
             return $this->respond(['error' => 'Unauthorized'], 401);
         }
 
+        try {
+            $user = $this->repository->findById($id);
+        } catch (\Throwable $e) {
+            return $this->respond(['error' => 'User not found'], 404);
+        }
+
+        if ($user === null) {
+            return $this->respond(['error' => 'User not found'], 404);
+        }
+
         if ($authUserId !== $id) {
             return $this->respond(['error' => 'Forbidden'], 403);
         }
 
         try {
-            $service = new DeleteUserService(
-                new UserRepository(\Config\Database::connect())
-            );
-            $deleted = $service->deleteUser($id);
+            $deleted = $this->deleteService->deleteUser($id);
 
             return $this->respond($deleted, 200);
         } catch (UserNotFoundException $e) {
@@ -133,5 +143,20 @@ class UserController extends Controller
         } catch (\Throwable $e) {
             return $this->respond(['error' => 'Delete failed'], 500);
         }
+    }
+
+    private function assertOwnership(string $id): ?ResponseInterface
+    {
+        $authUserId = AuthContext::getUserId();
+
+        if ($authUserId === null) {
+            return $this->respond(['error' => 'Unauthorized'], 401);
+        }
+
+        if ($authUserId !== $id) {
+            return $this->respond(['error' => 'Forbidden'], 403);
+        }
+
+        return null;
     }
 }
