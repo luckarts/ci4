@@ -226,4 +226,49 @@ class AuthenticationTest extends ApiTestCase
 
         $this->assertStatus(200, $response);
     }
+
+    public function test_rotated_refresh_token_cannot_be_reused()
+    {
+        $userData = [
+            'email'      => 'test-user-' . uniqid() . '@example.com',
+            'password'   => 'ValidPassword123',
+            'first_name' => 'Test',
+            'last_name'  => 'User',
+        ];
+
+        $registerResponse = $this->apiPost('/auth/register', $userData);
+        $this->assertStatus(201, $registerResponse);
+
+        // Get initial tokens
+        $tokens = $this->getTokenPair($userData['email'], $userData['password']);
+        $oldRefreshToken = $tokens['refresh_token'];
+
+        // Sleep to ensure new token has different timestamp
+        sleep(1);
+
+        // Use refresh token to get new tokens (rotation occurs here)
+        $refreshResponse = $this->apiPostFormEncoded('/auth/token', [
+            'grant_type'    => 'refresh_token',
+            'refresh_token' => $oldRefreshToken,
+            'client_id'     => getenv('OAUTH_CLIENT_ID') ?: 'app_client',
+            'client_secret' => getenv('OAUTH_CLIENT_SECRET') ?: 'secret',
+            'scope'         => 'profile',
+        ]);
+
+        $this->assertStatus(200, $refreshResponse);
+        $this->assertNotEmpty($refreshResponse['body']['refresh_token']);
+        $this->assertNotEquals($oldRefreshToken, $refreshResponse['body']['refresh_token']);
+
+        // Try to reuse the old (rotated) refresh token
+        $response = $this->apiPostFormEncoded('/auth/token', [
+            'grant_type'    => 'refresh_token',
+            'refresh_token' => $oldRefreshToken,
+            'client_id'     => getenv('OAUTH_CLIENT_ID') ?: 'app_client',
+            'client_secret' => getenv('OAUTH_CLIENT_SECRET') ?: 'secret',
+            'scope'         => 'profile',
+        ]);
+
+        $this->assertStatus(400, $response);
+        $this->assertArrayHasKey('error', $response['body']);
+    }
 }
