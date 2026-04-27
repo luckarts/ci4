@@ -2,7 +2,7 @@
 
 namespace Tests\Integration;
 
-use App\Repositories\UserRepository;
+use App\Modules\Shared\Repositories\UserRepository;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use Config\Database;

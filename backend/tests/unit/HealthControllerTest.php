@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\HealthController;
+use App\Modules\Auth\Controllers\HealthController;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\ControllerTestTrait;
 use CodeIgniter\Database\Config as DBConfig;

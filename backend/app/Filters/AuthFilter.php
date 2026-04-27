@@ -2,8 +2,8 @@
 
 namespace App\Filters;
 
-use App\Libraries\AuthContext;
-use App\Libraries\OAuthServer;
+use App\Modules\Auth\Libraries\OAuthServer;
+use App\Modules\Shared\Libraries\AuthContext;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;

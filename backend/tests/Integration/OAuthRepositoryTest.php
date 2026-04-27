@@ -2,9 +2,9 @@
 
 namespace Tests\Integration;
 
-use App\OAuth2\Repositories\AccessTokenRepository;
-use App\OAuth2\Repositories\RefreshTokenRepository;
-use App\OAuth2\Repositories\UserOAuth2Repository;
+use App\Modules\Auth\OAuth2\Repositories\AccessTokenRepository;
+use App\Modules\Auth\OAuth2\Repositories\RefreshTokenRepository;
+use App\Modules\Auth\OAuth2\Repositories\UserOAuth2Repository;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use Config\Database;

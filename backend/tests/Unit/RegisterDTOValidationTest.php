@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\DTO\RegisterUserDTO;
+use App\Modules\Auth\DTO\RegisterUserDTO;
 use PHPUnit\Framework\TestCase;
 
 class RegisterDTOValidationTest extends TestCase

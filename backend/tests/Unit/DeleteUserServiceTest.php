@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
-use App\Services\DeleteUserService;
-use App\Repositories\Contracts\UserRepositoryContract;
-use App\Exceptions\UserNotFoundException;
+use App\Modules\User\Services\DeleteUserService;
+use App\Modules\Shared\Contracts\UserRepositoryContract;
+use App\Modules\User\Exceptions\UserNotFoundException;
 use CodeIgniter\Test\CIUnitTestCase;
 
 class DeleteUserServiceTest extends CIUnitTestCase

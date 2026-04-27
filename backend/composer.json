@@ -26,6 +26,9 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/",
+            "App\\Modules\\Auth\\": "app/Modules/Auth/",
+            "App\\Modules\\User\\": "app/Modules/User/",
+            "App\\Modules\\Shared\\": "app/Modules/Shared/",
             "Config\\": "app/Config/"
         },
         "exclude-from-classmap": [

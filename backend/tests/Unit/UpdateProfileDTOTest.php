@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\DTO\UpdateProfileDTO;
+use App\Modules\User\DTO\UpdateProfileDTO;
 use CodeIgniter\Test\CIUnitTestCase;
 
 class UpdateProfileDTOTest extends CIUnitTestCase
