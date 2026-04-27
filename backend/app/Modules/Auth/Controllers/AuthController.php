@@ -5,8 +5,8 @@ namespace App\Modules\Auth\Controllers;
 use App\Modules\Auth\DTO\RegisterUserDTO;
 use App\Modules\Auth\Exceptions\UserAlreadyExistsException;
 use App\Modules\Auth\Libraries\OAuthServer;
+use App\Modules\Auth\Services\TokenRevocationService;
 use App\Modules\Auth\Services\UserRegistrationService;
-use App\Modules\Shared\Repositories\UserRepository;
 use CodeIgniter\API\ResponseTrait;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\Response;
@@ -14,6 +14,17 @@ use CodeIgniter\HTTP\Response;
 class AuthController extends Controller
 {
     use ResponseTrait;
+
+    private UserRegistrationService $registrationService;
+    private TokenRevocationService $revocationService;
+    private OAuthServer $oAuthServer;
+
+    public function __construct()
+    {
+        $this->registrationService = service('userRegistrationService');
+        $this->revocationService = service('tokenRevocationService');
+        $this->oAuthServer = service('oAuthServer');
+    }
 
     /**
      * POST /auth/register
@@ -36,10 +47,7 @@ class AuthController extends Controller
                 last_name:  $input['last_name'] ?? '',
             );
 
-            $service = new UserRegistrationService(
-                new UserRepository(\Config\Database::connect())
-            );
-            $userId = $service->register($dto);
+            $userId = $this->registrationService->register($dto);
 
             return $this->respond(['id' => $userId], 201);
         } catch (UserAlreadyExistsException $e) {
@@ -70,7 +78,7 @@ class AuthController extends Controller
         $serverResponse = $psr17Factory->createResponse();
 
         try {
-            $psrResponse = OAuthServer::getInstance()
+            $psrResponse = $this->oAuthServer
                 ->getAuthorizationServer()
                 ->respondToAccessTokenRequest($serverRequest, $serverResponse);
         } catch (\League\OAuth2\Server\Exception\OAuthServerException $e) {
@@ -118,64 +126,8 @@ class AuthController extends Controller
         $token         = $input['token'] ?? '';
         $tokenTypeHint = $input['token_type_hint'] ?? '';
 
-        if (empty($token)) {
-            return $this->respond([], 200);
-        }
-
-        $db            = \Config\Database::connect();
-        $encryptionKey = getenv('OAUTH_ENCRYPTION_KEY');
-
-        if ($tokenTypeHint === 'refresh_token' || empty($tokenTypeHint)) {
-            if ($this->tryRevokeRefreshToken($token, $db, $encryptionKey)) {
-                return $this->respond([], 200);
-            }
-        }
-
-        if ($tokenTypeHint === 'access_token' || empty($tokenTypeHint)) {
-            if ($this->tryRevokeAccessToken($token, $db)) {
-                return $this->respond([], 200);
-            }
-        }
+        $this->revocationService->revoke($token, $tokenTypeHint);
 
         return $this->respond([], 200);
-    }
-
-    private function tryRevokeRefreshToken(string $token, \CodeIgniter\Database\BaseConnection $db, string $encryptionKey): bool
-    {
-        try {
-            $repo      = new \App\Modules\Auth\OAuth2\Repositories\RefreshTokenRepository($db);
-            $decrypted = \Defuse\Crypto\Crypto::decryptWithPassword($token, $encryptionKey);
-            $payload   = json_decode($decrypted, true);
-
-            if (isset($payload['refresh_token_id'])) {
-                $repo->revokeRefreshToken($payload['refresh_token_id']);
-                return true;
-            }
-        } catch (\Throwable $e) {
-            // Not a valid refresh token, continue
-        }
-
-        return false;
-    }
-
-    private function tryRevokeAccessToken(string $token, \CodeIgniter\Database\BaseConnection $db): bool
-    {
-        try {
-            $parts = explode('.', $token);
-            if (count($parts) !== 3) {
-                return false;
-            }
-
-            $payload = json_decode(base64_decode($parts[1]), true);
-            if (isset($payload['jti'])) {
-                $repo = new \App\Modules\Auth\OAuth2\Repositories\AccessTokenRepository($db);
-                $repo->revokeAccessToken($payload['jti']);
-                return true;
-            }
-        } catch (\Throwable $e) {
-            // Not a valid access token, continue
-        }
-
-        return false;
     }
 }

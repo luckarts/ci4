@@ -12,6 +12,15 @@ use Nyholm\Psr7Server\ServerRequestCreator;
 
 class AuthFilter implements FilterInterface
 {
+    private OAuthServer $oAuthServer;
+    private AuthContext $authContext;
+
+    public function __construct()
+    {
+        $this->oAuthServer = service('oAuthServer');
+        $this->authContext = service('authContext');
+    }
+
     public function before(RequestInterface $request, $arguments = null)
     {
         $psr17Factory = new Psr17Factory();
@@ -21,12 +30,12 @@ class AuthFilter implements FilterInterface
         $psrRequest = $creator->fromGlobals();
 
         try {
-            $validated = OAuthServer::getInstance()
+            $validated = $this->oAuthServer
                 ->getResourceServer()
                 ->validateAuthenticatedRequest($psrRequest);
 
             $userId = $validated->getAttribute('oauth_user_id');
-            AuthContext::setUserId((string) $userId);
+            $this->authContext->setUserId((string) $userId);
             return null;
         } catch (\League\OAuth2\Server\Exception\OAuthServerException $e) {
             return service('response')

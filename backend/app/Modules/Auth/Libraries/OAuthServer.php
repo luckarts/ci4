@@ -20,9 +20,9 @@ class OAuthServer
     private AuthorizationServer $authorizationServer;
     private ResourceServer $resourceServer;
 
-    private function __construct()
+    public function __construct(?BaseConnection $db = null)
     {
-        $db = \Config\Database::connect();
+        $db = $db ?? \Config\Database::connect();
 
         $privateKeyPath = WRITEPATH . 'oauth_keys/private.key';
         $publicKeyPath = WRITEPATH . 'oauth_keys/public.key';

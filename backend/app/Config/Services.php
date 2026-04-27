@@ -2,31 +2,80 @@
 
 namespace Config;
 
+use App\Modules\Auth\Libraries\OAuthServer;
+use App\Modules\Auth\Services\TokenRevocationService;
+use App\Modules\Auth\Services\UserRegistrationService;
+use App\Modules\Shared\Libraries\AuthContext;
+use App\Modules\Shared\Repositories\UserRepository;
+use App\Modules\User\Services\DeleteUserService;
+use App\Modules\User\Services\UpdateProfileService;
 use CodeIgniter\Config\BaseService;
 
-/**
- * Services Configuration file.
- *
- * Services are simply other classes/libraries that the system uses
- * to do its job. This is used by CodeIgniter to allow the core of the
- * framework to be swapped out easily without affecting the usage within
- * the rest of your application.
- *
- * This file holds any application-specific services, or service overrides
- * that you might need. An example has been included with the general
- * method format you should use for your service methods. For more examples,
- * see the core Services file at system/Config/Services.php.
- */
 class Services extends BaseService
 {
-    /*
-     * public static function example($getShared = true)
-     * {
-     *     if ($getShared) {
-     *         return static::getSharedInstance('example');
-     *     }
-     *
-     *     return new \CodeIgniter\Example();
-     * }
-     */
+    public static function userRepository(bool $getShared = true): UserRepository
+    {
+        if ($getShared) {
+            return static::getSharedInstance('userRepository');
+        }
+
+        return new UserRepository(\Config\Database::connect());
+    }
+
+    public static function userRegistrationService(bool $getShared = true): UserRegistrationService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('userRegistrationService');
+        }
+
+        return new UserRegistrationService(static::userRepository(false));
+    }
+
+    public static function updateProfileService(bool $getShared = true): UpdateProfileService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('updateProfileService');
+        }
+
+        return new UpdateProfileService(static::userRepository(false));
+    }
+
+    public static function deleteUserService(bool $getShared = true): DeleteUserService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('deleteUserService');
+        }
+
+        return new DeleteUserService(static::userRepository(false));
+    }
+
+    public static function tokenRevocationService(bool $getShared = true): TokenRevocationService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('tokenRevocationService');
+        }
+
+        return new TokenRevocationService(
+            \Config\Database::connect(),
+            (string) getenv('OAUTH_ENCRYPTION_KEY')
+        );
+    }
+
+    public static function authContext(bool $getShared = true): AuthContext
+    {
+        if ($getShared) {
+            return static::getSharedInstance('authContext');
+        }
+
+        return new AuthContext();
+    }
+
+    public static function oAuthServer(bool $getShared = true): OAuthServer
+    {
+        if ($getShared) {
+            return static::getSharedInstance('oAuthServer');
+        }
+
+        return new OAuthServer(\Config\Database::connect());
+    }
 }
