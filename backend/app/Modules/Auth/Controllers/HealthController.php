@@ -4,10 +4,18 @@ namespace App\Modules\Auth\Controllers;
 
 use CodeIgniter\API\ResponseTrait;
 use CodeIgniter\Controller;
+use CodeIgniter\Database\BaseConnection;
 
 class HealthController extends Controller
 {
     use ResponseTrait;
+
+    private BaseConnection $db;
+
+    public function __construct()
+    {
+        $this->db = \Config\Database::connect();
+    }
 
     /**
      * GET /health
@@ -19,7 +27,7 @@ class HealthController extends Controller
     public function index(): \CodeIgniter\HTTP\ResponseInterface
     {
         try {
-            \Config\Database::connect()->query('SELECT 1');
+            $this->db->query('SELECT 1');
 
             return $this->response
                 ->setStatusCode(200)
