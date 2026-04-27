@@ -1,0 +1,8 @@
+Decrypted token
+Payload: {"client_id":"app_client","refresh_token_id":"6e2a78f1f3676be06694aa3154fec9696a454a37b2ff76fe4644eb8eba5ddf865fac6607f6985395","access_token_id":"cff6ef4b5f443cdfd0c6243251b1ced7f09ec2dc30d949a4b7a90dfeb0879ddc5a03f643e634b9fe","scopes":["profile"],"user_id":"d85cf39c-45ab-4f3e-9b17-28164dc3dc49","expire_time":1779661192}
+Calling revokeRefreshToken with ID: 6e2a78f1f3676be06694aa3154fec9696a454a37b2ff76fe4644eb8eba5ddf865fac6607f6985395
+Revoke completed
+Decrypted token
+Payload: {"client_id":"app_client","refresh_token_id":"91afc83228466e4cb1939f9f211c8c63f4376e72fd91f5bbc06aaee3ac2fc2349be916f134104396","access_token_id":"caa2d415dc236529c26ced48c906c816d28fde3c0e310f4c984c1417374ebfa26b18013ad2061ee1","scopes":["profile"],"user_id":"8c8447fc-f384-43f7-84ba-3d662492ae97","expire_time":1779661192}
+Calling revokeRefreshToken with ID: 91afc83228466e4cb1939f9f211c8c63f4376e72fd91f5bbc06aaee3ac2fc2349be916f134104396
+Revoke completed

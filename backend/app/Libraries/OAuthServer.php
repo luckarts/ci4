@@ -37,6 +37,10 @@ class OAuthServer
             throw new \RuntimeException('OAUTH_ENCRYPTION_KEY not set in .env');
         }
 
+        // Load TTLs from environment or use defaults
+        $accessTokenTTL = $this->getTTL('OAUTH_ACCESS_TOKEN_TTL', 'PT1H');
+        $refreshTokenTTL = $this->getTTL('OAUTH_REFRESH_TOKEN_TTL', 'P30D');
+
         // AuthorizationServer requires ClientRepository, AccessTokenRepository, ScopeRepository
         $this->authorizationServer = new AuthorizationServer(
             new ClientRepository($db),
@@ -51,20 +55,31 @@ class OAuthServer
             new UserOAuth2Repository($db),
             new RefreshTokenRepository($db)
         );
-        $passwordGrant->setRefreshTokenTTL(new DateInterval('P30D'));
-        $this->authorizationServer->enableGrantType($passwordGrant, new DateInterval('PT1H'));
+        $passwordGrant->setRefreshTokenTTL($refreshTokenTTL);
+        $this->authorizationServer->enableGrantType($passwordGrant, $accessTokenTTL);
 
         // Enable refresh token grant
         $refreshGrant = new RefreshTokenGrant(new RefreshTokenRepository($db));
         $refreshGrant->setAccessTokenRepository(new AccessTokenRepository($db));
-        $refreshGrant->setRefreshTokenTTL(new DateInterval('P30D'));
-        $this->authorizationServer->enableGrantType($refreshGrant, new DateInterval('PT1H'));
+        $refreshGrant->setRefreshTokenTTL($refreshTokenTTL);
+        $this->authorizationServer->enableGrantType($refreshGrant, $accessTokenTTL);
 
         // ResourceServer for JWT validation
         $this->resourceServer = new ResourceServer(
             new AccessTokenRepository($db),
             $publicKeyPath
         );
+    }
+
+    private function getTTL(string $envVar, string $default): DateInterval
+    {
+        $value = getenv($envVar) ?: $default;
+        try {
+            return new DateInterval($value);
+        } catch (\Exception $e) {
+            service('logger')->warning("Invalid ISO 8601 duration for $envVar=$value, using default $default");
+            return new DateInterval($default);
+        }
     }
 
     public static function getInstance(): self

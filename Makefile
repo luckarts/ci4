@@ -1,4 +1,4 @@
-.PHONY: test test-unit test-integration test-feature serve setup db-up db-down palace palace-auto palace-extract palace-verify palace-search
+.PHONY: test test-unit test-integration test-feature serve setup db-up db-down palace palace-auto palace-extract palace-capture palace-verify palace-search devlog
 
 setup:
 	bash scripts/install-hooks.sh
@@ -33,10 +33,18 @@ palace-auto:
 palace-extract:
 	python3 scripts/palace/palace_blog_auto.py --extract
 
+palace-capture:
+	@LATEST=$$(ls -t ~/.claude/projects/-home-luc-Documents-ci4/*.jsonl 2>/dev/null | head -1); \
+	[ -n "$$LATEST" ] && python3 scripts/palace/extract_session.py --save-capture ~/.palace-captures "$$LATEST" \
+	&& echo "Session saved to ~/.palace-captures/" || echo "No session found"
+
 palace-verify:
 	python3 scripts/palace/palace_blog_auto.py --verify
 
 palace-search:
 	@read -p "Search query: " query; mempalace search "$$query"
+
+devlog:
+	python3 scripts/palace/palace_blog_auto.py --merge-day
 
 .DEFAULT_GOAL := help

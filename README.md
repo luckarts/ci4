@@ -3,6 +3,8 @@
 Task manager personnel et collaboratif où chaque tâche porte son palace de connaissance.
 Backend **CodeIgniter 4** — API REST uniquement. Frontend consommé par une application Nuxt tierce.
 
+ Hook PreCompact ajouté dans settings.local.json — pipe-testé et validé JSON                                   
+  - make devlog ajouté au Makefile          
 ---
 
 ## Concept
