@@ -66,5 +66,7 @@
         <env name="database.default.password" value="password"/>
         <env name="database.default.DBDriver" value="Postgre"/>
         <env name="database.default.schema" value="public"/>
+        <!-- Use dummy cache handler in tests to disable throttling -->
+        <env name="CACHE_HANDLER" value="dummy"/>
     </php>
 </phpunit>
