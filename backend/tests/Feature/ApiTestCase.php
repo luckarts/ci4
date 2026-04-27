@@ -11,7 +11,12 @@ abstract class ApiTestCase extends CIUnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        \App\Modules\Shared\Libraries\AuthContext::reset();
+        $this->resetAuthContext();
+    }
+
+    protected function resetAuthContext(): void
+    {
+        \Config\Services::injectMock('authContext', new \App\Modules\Shared\Libraries\AuthContext());
     }
 
     protected function apiPost(string $uri, array $data = [], array $headers = []): array
