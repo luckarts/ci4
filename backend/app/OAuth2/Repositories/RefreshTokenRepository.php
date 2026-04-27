@@ -46,7 +46,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
             ->getRow();
 
         if (!$token) {
-            return false;
+            return true;
         }
 
         // SQLite returns boolean as 0/1 or 'f'/'t'
