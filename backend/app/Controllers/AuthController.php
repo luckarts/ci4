@@ -15,13 +15,12 @@ class AuthController extends Controller
 
     /**
      * POST /auth/register
-     * Register a new user account
+     * Register a new user account.
      *
-     * @return JSON User ID on successful registration
-     * @throws 201 Created - User successfully registered
-     * @throws 409 Conflict - User already exists with this email
-     * @throws 422 Unprocessable Entity - Validation failed
-     * @throws 500 Internal Server Error - Registration failed
+     * @http 201 Created - User successfully registered
+     * @http 409 Conflict - User already exists with this email
+     * @http 422 Unprocessable Entity - Validation failed
+     * @http 500 Server Error - Registration failed
      */
     public function register()
     {
@@ -52,13 +51,12 @@ class AuthController extends Controller
 
     /**
      * POST /auth/token
-     * Generate OAuth2 access token and refresh token (password grant flow)
+     * Generate OAuth2 access token and refresh token (password grant flow, rate-limited).
      *
-     * @return JSON Access token and refresh token
-     * @throws 200 OK - Tokens generated successfully
-     * @throws 400 Bad Request - Invalid credentials or missing parameters
-     * @throws 429 Too Many Requests - Rate limit exceeded
-     * @throws 500 Internal Server Error - Server error
+     * @http 200 OK - Access and refresh tokens generated
+     * @http 400 Bad Request - Invalid credentials or missing parameters
+     * @http 429 Too Many Requests - Rate limit exceeded
+     * @http 500 Server Error - Server error
      */
     public function token()
     {
@@ -101,11 +99,10 @@ class AuthController extends Controller
 
     /**
      * POST /auth/revoke
-     * Revoke OAuth2 token (access or refresh token)
+     * Revoke OAuth2 token (access or refresh token, rate-limited).
      *
-     * @return JSON Empty response (RFC 7009 compliant)
-     * @throws 200 OK - Token revoked or invalid token (always 200 per RFC 7009)
-     * @throws 429 Too Many Requests - Rate limit exceeded
+     * @http 200 OK - Token revoked or invalid token (RFC 7009 compliant)
+     * @http 429 Too Many Requests - Rate limit exceeded
      */
     public function revoke()
     {

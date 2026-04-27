@@ -16,13 +16,13 @@ class UserController extends Controller
 
     /**
      * GET /users/{id}
-     * Returns user profile information (authenticated users only)
+     * Returns user profile information (authenticated users only).
      *
      * @param string $id User ID to retrieve
-     * @return JSON User object without password hash
-     * @throws 401 Unauthorized - No valid authentication token
-     * @throws 403 Forbidden - User can only access their own profile
-     * @throws 404 Not Found - User does not exist
+     * @http 200 Success - User object
+     * @http 401 Unauthorized - No valid authentication token
+     * @http 403 Forbidden - Can only access own profile
+     * @http 404 Not Found - User does not exist
      */
     public function show(string $id)
     {
@@ -52,14 +52,14 @@ class UserController extends Controller
 
     /**
      * PUT /users/{id}/profile
-     * Updates user profile information (authenticated users only)
+     * Updates user profile information (authenticated users only).
      *
      * @param string $id User ID to update
-     * @return JSON Updated user object without password hash
-     * @throws 401 Unauthorized - No valid authentication token
-     * @throws 403 Forbidden - User can only update their own profile
-     * @throws 404 Not Found - User does not exist
-     * @throws 422 Unprocessable Entity - Validation failed
+     * @http 200 Success - Updated user object
+     * @http 401 Unauthorized - No valid authentication token
+     * @http 403 Forbidden - Can only update own profile
+     * @http 404 Not Found - User does not exist
+     * @http 422 Validation Failed - Invalid input data
      */
     public function update(string $id)
     {
@@ -101,13 +101,13 @@ class UserController extends Controller
 
     /**
      * DELETE /users/{id}
-     * Deletes user account (authenticated users only)
+     * Deletes user account (authenticated users only).
      *
      * @param string $id User ID to delete
-     * @return JSON Confirmation of deletion
-     * @throws 401 Unauthorized - No valid authentication token
-     * @throws 403 Forbidden - User can only delete their own account
-     * @throws 404 Not Found - User does not exist
+     * @http 200 Success - Account deleted
+     * @http 401 Unauthorized - No valid authentication token
+     * @http 403 Forbidden - Can only delete own account
+     * @http 404 Not Found - User does not exist
      */
     public function destroy(string $id)
     {
